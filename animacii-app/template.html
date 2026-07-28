@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Анимации — ТВ програма</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f4f0;
+    --card: #ffffff;
+    --card-2: #efece6;
+    --ink: #17150f;
+    --muted: #79746a;
+    --line: rgba(23, 21, 15, .08);
+    --accent: #ff4b26;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(255, 75, 38, .1);
+    --glass: rgba(246, 244, 240, .72);
+    --display: "Unbounded", system-ui, sans-serif;
+    --body: "Manrope", -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12110e;
+      --card: #1d1b17;
+      --card-2: #26231e;
+      --ink: #f4f1ea;
+      --muted: #9b958a;
+      --line: rgba(244, 241, 234, .09);
+      --accent: #ff5c38;
+      --accent-soft: rgba(255, 92, 56, .14);
+      --glass: rgba(18, 17, 14, .72);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15.5px;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  .blob {
+    position: fixed; z-index: -1; border-radius: 50%;
+    filter: blur(90px); opacity: .5; pointer-events: none;
+  }
+  .blob-a { width: 480px; height: 480px; top: -180px; right: -120px; background: var(--accent); opacity: .16; }
+
+  .wrap { max-width: 820px; margin: 0 auto; padding: 28px 20px 90px; }
+
+  /* --- Херо ------------------------------------------------------------ */
+  .brand {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 700; font-size: 13px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .brand .dot { color: var(--accent); }
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: clamp(52px, 12vw, 108px);
+    line-height: .95;
+    letter-spacing: -.02em;
+    margin: 26px 0 14px;
+    animation: up .6s cubic-bezier(.2,.8,.2,1) backwards;
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+  .sub {
+    font-size: 16px; font-weight: 500; color: var(--muted);
+    margin-bottom: 34px;
+    animation: up .6s .08s cubic-bezier(.2,.8,.2,1) backwards;
+  }
+  .sub strong { color: var(--ink); font-weight: 700; }
+  @keyframes up { from { opacity: 0; transform: translateY(18px); } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* --- Търсене (sticky, glassy) ---------------------------------------- */
+  .search-wrap {
+    position: sticky; top: 12px; z-index: 10;
+    animation: up .6s .16s cubic-bezier(.2,.8,.2,1) backwards;
+  }
+  .search {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--glass);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 8px 6px 22px;
+    box-shadow: 0 12px 32px -18px rgba(0,0,0,.28);
+    transition: border-color .2s;
+  }
+  .search:focus-within { border-color: var(--accent); }
+  .search svg { flex: none; width: 20px; height: 20px; stroke: var(--muted); }
+  #search {
+    flex: 1; min-width: 0;
+    background: none; border: 0; outline: none;
+    font-family: var(--body); font-weight: 600; font-size: 17px;
+    color: var(--ink);
+    padding: 10px 0;
+  }
+  #search::placeholder { color: var(--muted); font-weight: 500; }
+  #clear {
+    flex: none; display: none;
+    border: 0; cursor: pointer;
+    background: var(--card-2); color: var(--muted);
+    border-radius: 999px; width: 38px; height: 38px;
+    font-size: 16px; font-weight: 700;
+  }
+  #clear:hover { color: var(--ink); }
+  .search.has-text #clear { display: block; }
+
+  /* --- Чипове канали ----------------------------------------------------- */
+  .chips {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 18px 2px 6px;
+    scrollbar-width: none;
+    animation: up .6s .22s cubic-bezier(.2,.8,.2,1) backwards;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips button {
+    flex: none; cursor: pointer;
+    font-family: var(--body); font-weight: 700; font-size: 13.5px;
+    color: var(--ink);
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 9px 16px;
+    transition: transform .15s, border-color .15s, background .15s, color .15s;
+  }
+  .chips button:hover { transform: translateY(-1px); border-color: var(--muted); }
+  .chips button:focus-visible, #search:focus-visible, .card summary:focus-visible {
+    outline: 2.5px solid var(--accent); outline-offset: 2px;
+  }
+  .chips button[aria-pressed="true"] {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+  }
+
+  .count { margin: 16px 4px 14px; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+
+  /* --- Карти ------------------------------------------------------------ */
+  #list { display: flex; flex-direction: column; gap: 10px; }
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 20px;
+    animation: up .5s cubic-bezier(.2,.8,.2,1) backwards;
+    transition: transform .18s, border-color .18s, box-shadow .18s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--muted); box-shadow: 0 16px 34px -24px rgba(0,0,0,.35); }
+  .card[open] { border-color: var(--accent); }
+  .card summary {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px;
+  }
+  .card summary::-webkit-details-marker { display: none; }
+  .card-text { min-width: 0; }
+  .show-name {
+    font-family: var(--display); font-weight: 700; font-size: 16.5px;
+    line-height: 1.25;
+  }
+  .show-channels {
+    margin-top: 3px;
+    font-size: 12.5px; font-weight: 600; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .show-next {
+    margin-left: auto; flex: none;
+    font-weight: 800; font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    background: var(--card-2);
+    border-radius: 999px;
+    padding: 7px 14px;
+  }
+  .show-next.live { background: var(--accent); color: var(--accent-ink); }
+  .show-next.live::before {
+    content: ""; display: inline-block;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; margin-right: 7px; vertical-align: 1px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .chev { flex: none; width: 18px; height: 18px; stroke: var(--muted); transition: transform .25s; }
+  .card[open] .chev { transform: rotate(180deg); }
+
+  /* --- Разгъната програма ------------------------------------------------ */
+  .schedule { padding: 4px 20px 20px; animation: up .35s cubic-bezier(.2,.8,.2,1); }
+  .day { margin-top: 14px; }
+  .day h3 {
+    display: inline-block;
+    font-family: var(--body); font-weight: 800; font-size: 12px;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 5px 12px;
+    margin-bottom: 8px;
+  }
+  .airing {
+    display: flex; gap: 14px; align-items: baseline;
+    padding: 5px 8px;
+    border-radius: 10px;
+    font-size: 14.5px;
+  }
+  .airing time {
+    font-family: var(--mono); font-weight: 600; font-size: 13.5px;
+    font-variant-numeric: tabular-nums;
+    min-width: 100px;
+  }
+  .airing .ch { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .airing.past { opacity: .38; }
+  .airing.live-row { background: var(--accent-soft); }
+  .airing.live-row time, .airing.live-row .ch { color: var(--accent); opacity: 1; }
+
+  .empty {
+    text-align: center; padding: 70px 0 40px;
+  }
+  .empty p { font-family: var(--display); font-weight: 700; font-size: 19px; margin-bottom: 18px; }
+  .empty button {
+    cursor: pointer; border: 0;
+    font-family: var(--body); font-weight: 800; font-size: 14px;
+    background: var(--accent); color: var(--accent-ink);
+    border-radius: 999px; padding: 12px 22px;
+  }
+
+  footer {
+    margin-top: 60px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+    font-size: 12.5px; font-weight: 600; color: var(--muted);
+  }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="blob blob-a"></div>
+<div class="wrap">
+  <header>
+    <div class="brand"><span>Детска ТВ програма</span><span><span class="dot">●</span> 11 канала</span></div>
+    <h1>Анимации</h1>
+    <p class="sub">Кога и по кой канал — <strong id="period"></strong></p>
+  </header>
+
+  <main>
+    <div class="search-wrap">
+      <div class="search" id="searchbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+        <input id="search" type="search" placeholder="Кога дават…" autocomplete="off" aria-label="Търсене на предаване">
+        <button id="clear" aria-label="Изчисти търсенето">✕</button>
+      </div>
+    </div>
+
+    <nav class="chips" id="channels" aria-label="Филтър по канал"></nav>
+    <p class="count" id="count"></p>
+    <section id="list" aria-live="polite"></section>
+  </main>
+
+  <footer>
+    <span>Данни: <a href="https://github.com/harrygg/EPG">harrygg/EPG</a> · часове за България</span>
+    <span id="generated"></span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const DATA = /*__DATA_JSON__*/;
+
+const TZ = "Europe/Sofia";
+const dayKeyFmt = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, dateStyle: "short" });
+const dayLabelFmt = new Intl.DateTimeFormat("bg-BG", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" });
+const weekdayFmt = new Intl.DateTimeFormat("bg-BG", { timeZone: TZ, weekday: "short" });
+const timeFmt = new Intl.DateTimeFormat("bg-BG", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+const periodFmt = new Intl.DateTimeFormat("bg-BG", { timeZone: TZ, day: "numeric", month: "long" });
+
+const dayKey = (iso) => dayKeyFmt.format(new Date(iso));
+const TODAY = dayKey(new Date().toISOString());
+const TOMORROW = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return dayKey(d.toISOString()); })();
+
+function dayLabel(iso) {
+  const key = dayKey(iso);
+  const label = dayLabelFmt.format(new Date(iso));
+  if (key === TODAY) return "днес · " + label;
+  if (key === TOMORROW) return "утре · " + label;
+  return label;
+}
+
+function airingState(a, now) {
+  const s = new Date(a.s), e = a.e ? new Date(a.e) : null;
+  if (e && e <= now) return "past";
+  if (s <= now && (!e || now < e)) return "live";
+  return "future";
+}
+
+const listEl = document.getElementById("list");
+const countEl = document.getElementById("count");
+const searchEl = document.getElementById("search");
+let activeChannel = null;
+
+function nextAiringText(show, now) {
+  const live = show.airings.find(a => airingState(a, now) === "live");
+  if (live) return { text: "в ефир", live: true };
+  const next = show.airings.find(a => new Date(a.s) > now);
+  if (!next) return { text: "", live: false };
+  const key = dayKey(next.s);
+  const day = key === TODAY ? "днес" : key === TOMORROW ? "утре" : weekdayFmt.format(new Date(next.s));
+  return { text: day + " " + timeFmt.format(new Date(next.s)), live: false };
+}
+
+function renderShow(show, index, now) {
+  const details = document.createElement("details");
+  details.className = "card";
+  details.style.animationDelay = Math.min(index * 22, 380) + "ms";
+
+  const next = nextAiringText(show, now);
+  const summary = document.createElement("summary");
+  summary.innerHTML =
+    '<div class="card-text"><div class="show-name"></div><div class="show-channels"></div></div>' +
+    (next.text ? '<span class="show-next' + (next.live ? " live" : "") + '"></span>' : "") +
+    '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  summary.querySelector(".show-name").textContent = show.name;
+  summary.querySelector(".show-channels").textContent = show.channels.join(" · ");
+  if (next.text) summary.querySelector(".show-next").textContent = next.text;
+  details.appendChild(summary);
+
+  details.addEventListener("toggle", () => {
+    if (details.open && !details.querySelector(".schedule")) {
+      details.appendChild(renderSchedule(show, new Date()));
+    }
+  });
+  return details;
+}
+
+function renderSchedule(show, now) {
+  const wrap = document.createElement("div");
+  wrap.className = "schedule";
+  const byDay = new Map();
+  for (const a of show.airings) {
+    const key = dayKey(a.s);
+    if (key < TODAY) continue;
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key).push(a);
+  }
+  for (const [, airings] of [...byDay.entries()].sort()) {
+    const day = document.createElement("div");
+    day.className = "day";
+    const h = document.createElement("h3");
+    h.textContent = dayLabel(airings[0].s);
+    day.appendChild(h);
+    for (const a of airings) {
+      const state = airingState(a, now);
+      const row = document.createElement("div");
+      row.className = "airing" + (state === "past" ? " past" : state === "live" ? " live-row" : "");
+      const t = document.createElement("time");
+      t.textContent = timeFmt.format(new Date(a.s)) + (a.e ? "–" + timeFmt.format(new Date(a.e)) : "");
+      const ch = document.createElement("span");
+      ch.className = "ch";
+      ch.textContent = a.ch + (state === "live" ? " · в ефир сега" : "");
+      row.append(t, ch);
+      day.appendChild(row);
+    }
+    wrap.appendChild(day);
+  }
+  return wrap;
+}
+
+function refresh() {
+  const q = searchEl.value.trim().toLowerCase();
+  document.getElementById("searchbox").classList.toggle("has-text", q.length > 0);
+  const now = new Date();
+  const visible = DATA.shows.filter(s =>
+    (!q || s.search.includes(q)) &&
+    (!activeChannel || s.channels.includes(activeChannel))
+  );
+
+  listEl.replaceChildren();
+  if (!visible.length) {
+    const div = document.createElement("div");
+    div.className = "empty";
+    div.innerHTML = "<p>Нищо не открихме</p>";
+    const btn = document.createElement("button");
+    btn.textContent = "Изчисти филтрите";
+    btn.addEventListener("click", () => {
+      searchEl.value = ""; activeChannel = null;
+      for (const b of channelsEl.children) b.setAttribute("aria-pressed", "false");
+      refresh();
+    });
+    div.appendChild(btn);
+    listEl.appendChild(div);
+  } else {
+    visible.forEach((s, i) => listEl.appendChild(renderShow(s, i, now)));
+  }
+
+  const airings = visible.reduce((n, s) => n + s.airings.length, 0);
+  countEl.textContent = visible.length + " предавания · " + airings + " излъчвания";
+}
+
+const channelsEl = document.getElementById("channels");
+for (const ch of DATA.channels) {
+  const b = document.createElement("button");
+  b.textContent = ch;
+  b.setAttribute("aria-pressed", "false");
+  b.addEventListener("click", () => {
+    activeChannel = activeChannel === ch ? null : ch;
+    for (const btn of channelsEl.children) {
+      btn.setAttribute("aria-pressed", String(btn.textContent === activeChannel));
+    }
+    refresh();
+  });
+  channelsEl.appendChild(b);
+}
+
+document.getElementById("period").textContent =
+  periodFmt.format(new Date(DATA.range.from)) + " – " + periodFmt.format(new Date(DATA.range.to));
+document.getElementById("generated").textContent =
+  "обновено " + new Intl.DateTimeFormat("bg-BG", { timeZone: TZ, dateStyle: "short", timeStyle: "short" }).format(new Date(DATA.generated_at));
+searchEl.addEventListener("input", refresh);
+document.getElementById("clear").addEventListener("click", () => { searchEl.value = ""; refresh(); searchEl.focus(); });
+refresh();
+</script>
+</body>
+</html>

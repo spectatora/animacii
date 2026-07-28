@@ -1,0 +1,20 @@
+# Детските канали, които pipeline-ът следи.
+#
+# Закачането е по channel id от емисията, НИКОГА по display-name:
+# имената в източника са мръсни ("Nickeldeon" с правописна грешка,
+# "Disney J" вместо Disney Junior), а id-тата са стабилни и чисти.
+# Стойността е нашето човешко име на канала.
+#
+# Id-тата са снети от all-3days.full.epg.xml.gz на 23.07.2026.
+channels:
+  cartoonnetwork.tv: Cartoon Network
+  cartoonito.bg: Cartoonito
+  nickelodeon.tv: Nickelodeon
+  nicktoons.tv: Nicktoons
+  nick.tv: Nick Jr.
+  disneychannel.bg: Disney Channel
+  disneyjunior.bg: Disney Junior
+  ekids.bg: e-Kids
+  duck.tv: Duck TV
+  baby.tv: Baby TV
+  davincilearning.tv: Da Vinci Learning

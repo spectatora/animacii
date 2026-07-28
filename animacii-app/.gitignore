@@ -1,0 +1,3 @@
+# dist/ е генериран изход на build.py — строи се от epg.sqlite при нужда.
+dist/
+__pycache__/

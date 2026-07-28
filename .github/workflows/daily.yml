@@ -1,0 +1,69 @@
+# Дневният цикъл: ingest -> build -> Pages, всяка сутрин.
+#
+# Емисията на harrygg/EPG излиза около 02:40 UTC; cron-ът в 04:00 UTC
+# (07:00 софийско) хваща винаги свежия ден. workflow_dispatch позволява
+# ръчно пускане от Actions таба.
+#
+# Персистенция: runner-ите са еднократни, затова обновената epg.sqlite
+# се commit-ва обратно в репото — така историята се трупа отвъд
+# 3-дневния прозорец на източника.
+
+name: daily
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -e "epg-pipeline[dev]"
+
+      - name: Test
+        run: |
+          python -m pytest epg-pipeline -q
+          python -m pytest animacii-app -q
+
+      - name: Ingest EPG feed
+        run: python -m epg_pipeline.ingest
+
+      - name: Build site
+        run: python animacii-app/build.py
+
+      - name: Commit updated database
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add epg-pipeline/data/epg.sqlite
+          git diff --cached --quiet || git commit -m "data: дневен EPG ingest"
+          git push
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: animacii-app/dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
